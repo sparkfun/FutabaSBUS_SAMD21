@@ -9,7 +9,7 @@ This code interprets a Futaba SBUS data stream with a SAMD21 Mini Breakout by
 SparkFun Electronics (https://www.sparkfun.com/products/13664). The specific
 receiver used was a FrSky XSR, the transmitter being a FrSky Taranis X9D Plus.
 
-Also requires the AdaFruit NeoPixel Library to run the WS2812B's
+Also requires the FastLED Library to run the WS2812B's
 
 Development environment specifics:
 Arduino 1.8.2
@@ -17,20 +17,24 @@ Arduino 1.8.2
 
 
 //Setup up the WS2812B's===========================================================
-#include <Adafruit_NeoPixel.h>
+#include "FastLED.h"
 
-#define PIN            12
-#define NUMPIXELS      16
+// 16 LED's
+#define NUM_LEDS 16
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-//=================================================================================
-  
+#define DATA_PIN 12
+
+// Define the array of leds
+CRGB leds[NUM_LEDS];
 
 void setup() {
   // initialize digital pin LED_BUILTIN as an output.
   pinMode(LED_BUILTIN, OUTPUT);
   
-  pixels.begin(); // This initializes the NeoPixel library.
+  //pixels.begin(); // This initializes the NeoPixel library.
+
+  LEDS.addLeds<WS2812,DATA_PIN,RGB>(leds,NUM_LEDS);
+  //LEDS.setBrightness(84);
 
   //Setup Serial1 to read the SBUS data. Don't forget - the signal is also inverted,
   //so you'll have to deal with that in hardware.
@@ -70,7 +74,7 @@ void loop() {
     delay(50);
   }
 
-
+   
   //zero  channel array
   for (x = 0; x < 17; x++) {channel[x] = 0;}
  
@@ -94,9 +98,11 @@ void loop() {
         x++;
       }
     }
+  
 
     //check to see if it's a good frame...sorta. Ideally, I should be looking for the
     //dead time before the data gets sent as well, but haven't implimented that yet.
+    //As as result, this sucker's a little finicky with repeated TX power cycling.
     if ((RX_array[0] == 0x0F) && (RX_array[24] == 0))
 
     //Dump it into the channel array
@@ -146,23 +152,14 @@ void loop() {
     //no lights in mode 0
     if (mode == 0)
     {
-      pixels.setPixelColor(0, pixels.Color(0,0,0));
-      pixels.setPixelColor(1, pixels.Color(0,0,0));
-      pixels.setPixelColor(2, pixels.Color(0,0,0));
-      pixels.setPixelColor(3, pixels.Color(0,0,0));
-      pixels.setPixelColor(4, pixels.Color(0,0,0));
-      pixels.setPixelColor(5, pixels.Color(0,0,0));
-      pixels.setPixelColor(6, pixels.Color(0,0,0));
-      pixels.setPixelColor(7, pixels.Color(0,0,0));
-      pixels.setPixelColor(8, pixels.Color(0,0,0));
-      pixels.setPixelColor(9, pixels.Color(0,0,0));
-      pixels.setPixelColor(10, pixels.Color(0,0,0));
-      pixels.setPixelColor(11, pixels.Color(0,0,0));
-      pixels.setPixelColor(12, pixels.Color(0,0,0));
-      pixels.setPixelColor(13, pixels.Color(0,0,0));
-      pixels.setPixelColor(14, pixels.Color(0,0,0));
-      pixels.setPixelColor(15, pixels.Color(0,0,0));
-      pixels.show();
+     
+      for (x = 0; x < 16; x++)
+      {
+        leds[x] = CRGB(0, 0, 0);
+      }
+      
+      FastLED.show(); 
+     
     }
 
 
@@ -176,27 +173,30 @@ void loop() {
         {
           if (mode == 1)  //green spinners
           {
-            pixels.setPixelColor(0, pixels.Color(0,bright,0));
-            pixels.setPixelColor(1, pixels.Color(0,0,0));
-            pixels.setPixelColor(2, pixels.Color(0,0,0));
-            pixels.setPixelColor(3, pixels.Color(0,0,0));
-            pixels.setPixelColor(4, pixels.Color(0,bright,0));
-            pixels.setPixelColor(5, pixels.Color(0,0,0));
-            pixels.setPixelColor(6, pixels.Color(0,0,0));
-            pixels.setPixelColor(7, pixels.Color(0,0,0));
-            pixels.setPixelColor(8, pixels.Color(0,bright,0));
-            pixels.setPixelColor(9, pixels.Color(0,0,0));
-            pixels.setPixelColor(10, pixels.Color(0,0,0));
-            pixels.setPixelColor(11, pixels.Color(0,0,0));
-            pixels.setPixelColor(12, pixels.Color(0,bright,0));
-            pixels.setPixelColor(13, pixels.Color(0,0,0));
-            pixels.setPixelColor(14, pixels.Color(0,0,0));
-            pixels.setPixelColor(15, pixels.Color(0,0,0));
-            pixels.show();
+            leds[0] = CRGB(bright,0,0);
+            leds[1] = CRGB(0,0,0);
+            leds[2] = CRGB(0,0,0);
+            leds[3] = CRGB(0,0,0);
+            leds[4] = CRGB(bright,0,0);
+            leds[5] = CRGB(0,0,0);
+            leds[6] = CRGB(0,0,0);
+            leds[7] = CRGB(0,0,0);
+            leds[8] = CRGB(bright,0,0);
+            leds[9] = CRGB(0,0,0);
+            leds[10] = CRGB(0,0,0);
+            leds[11] = CRGB(0,0,0);
+            leds[12] = CRGB(bright,0,0);
+            leds[13] = CRGB(0,0,0);
+            leds[14] = CRGB(0,0,0);
+            leds[15] = CRGB(0,0,0);
+            FastLED.show();
+
+            
           }
 
           else if (mode == 2)
           {
+            /*
             //blue with red added
             pixels.setPixelColor(0, pixels.Color(hue1,0,bright));
             pixels.setPixelColor(1, pixels.Color(hue1,0,bright));
@@ -215,7 +215,25 @@ void loop() {
             pixels.setPixelColor(14, pixels.Color(0,0,0));
             pixels.setPixelColor(15, pixels.Color(0,0,0));
             pixels.show();
-            
+            */
+
+            leds[0] = CRGB(hue1,0,bright);
+            leds[1] = CRGB(hue1,0,bright);
+            leds[2] = CRGB(hue1,0,bright);
+            leds[3] = CRGB(hue1,0,bright);
+            leds[4] = CRGB(0,0,0);
+            leds[5] = CRGB(0,0,0);
+            leds[6] = CRGB(0,0,0);
+            leds[7] = CRGB(0,0,0);
+            leds[8] = CRGB(hue1,0,bright);
+            leds[9] = CRGB(hue1,0,bright);
+            leds[10] = CRGB(hue1,0,bright);
+            leds[11] = CRGB(hue1,0,bright);
+            leds[12] = CRGB(0,0,0);
+            leds[13] = CRGB(0,0,0);
+            leds[14] = CRGB(0,0,0);
+            leds[15] = CRGB(0,0,0);
+            FastLED.show();
           }
   
         }
@@ -224,27 +242,29 @@ void loop() {
         {
           if (mode == 1)  //green spinners
           {
-            pixels.setPixelColor(0, pixels.Color(0,0,0));
-            pixels.setPixelColor(1, pixels.Color(0,0,0));
-            pixels.setPixelColor(2, pixels.Color(0,0,0));
-            pixels.setPixelColor(3, pixels.Color(0,bright,0));
-            pixels.setPixelColor(4, pixels.Color(0,0,0));
-            pixels.setPixelColor(5, pixels.Color(0,bright,0));
-            pixels.setPixelColor(6, pixels.Color(0,0,0));
-            pixels.setPixelColor(7, pixels.Color(0,0,0));
-            pixels.setPixelColor(8, pixels.Color(0,0,0));
-            pixels.setPixelColor(9, pixels.Color(0,0,0));
-            pixels.setPixelColor(10, pixels.Color(0,0,0));
-            pixels.setPixelColor(11, pixels.Color(0,bright,0));
-            pixels.setPixelColor(12, pixels.Color(0,0,0));
-            pixels.setPixelColor(13, pixels.Color(0,bright,0));
-            pixels.setPixelColor(14, pixels.Color(0,0,0));
-            pixels.setPixelColor(15, pixels.Color(0,0,0));
-            pixels.show();
+
+            leds[0] = CRGB(0,0,0);
+            leds[1] = CRGB(0,0,0);
+            leds[2] = CRGB(0,0,0);
+            leds[3] = CRGB(bright,0,0);
+            leds[4] = CRGB(0,0,0);
+            leds[5] = CRGB(bright,0,0);
+            leds[6] = CRGB(0,0,0);
+            leds[7] = CRGB(0,0,0);
+            leds[8] = CRGB(0,0,0);
+            leds[9] = CRGB(0,0,0);
+            leds[10] = CRGB(0,0,0);
+            leds[11] = CRGB(bright,0,0);
+            leds[12] = CRGB(0,0,0);
+            leds[13] = CRGB(bright,0,0);
+            leds[14] = CRGB(0,0,0);
+            leds[15] = CRGB(0,0,0);
+            FastLED.show();
           }
 
           else if (mode == 2)
           {
+            /*
             //green with blue added
             pixels.setPixelColor(0, pixels.Color(0,0,0));
             pixels.setPixelColor(1, pixels.Color(0,0,0));
@@ -263,7 +283,26 @@ void loop() {
             pixels.setPixelColor(14, pixels.Color(0,bright,hue2));
             pixels.setPixelColor(15, pixels.Color(0,bright,hue2));
             pixels.show();
-            
+            */
+
+
+            leds[0] = CRGB(0,0,0);
+            leds[1] = CRGB(0,0,0);
+            leds[2] = CRGB(0,0,0);
+            leds[3] = CRGB(0,0,0);
+            leds[4] = CRGB(0,bright,hue2);
+            leds[5] = CRGB(0,bright,hue2);
+            leds[6] = CRGB(0,bright,hue2);
+            leds[7] = CRGB(0,bright,hue2);
+            leds[8] = CRGB(0,0,0);
+            leds[9] = CRGB(0,0,0);
+            leds[10] = CRGB(0,0,0);
+            leds[11] = CRGB(0,0,0);
+            leds[12] = CRGB(0,bright,hue2);
+            leds[13] = CRGB(0,bright,hue2);
+            leds[14] = CRGB(0,bright,hue2);
+            leds[15] = CRGB(0,bright,hue2);
+            FastLED.show();
           }
         }
   
@@ -271,27 +310,29 @@ void loop() {
         {
           if (mode == 1)  //green spinners
           {
-            pixels.setPixelColor(0, pixels.Color(0,0,0));
-            pixels.setPixelColor(1, pixels.Color(0,0,0));
-            pixels.setPixelColor(2, pixels.Color(0,bright,0));
-            pixels.setPixelColor(3, pixels.Color(0,0,0));
-            pixels.setPixelColor(4, pixels.Color(0,0,0));
-            pixels.setPixelColor(5, pixels.Color(0,0,0));
-            pixels.setPixelColor(6, pixels.Color(0,bright,0));
-            pixels.setPixelColor(7, pixels.Color(0,0,0));
-            pixels.setPixelColor(8, pixels.Color(0,0,0));
-            pixels.setPixelColor(9, pixels.Color(0,0,0));
-            pixels.setPixelColor(10, pixels.Color(0,bright,0));
-            pixels.setPixelColor(11, pixels.Color(0,0,0));
-            pixels.setPixelColor(12, pixels.Color(0,0,0));
-            pixels.setPixelColor(13, pixels.Color(0,0,0));
-            pixels.setPixelColor(14, pixels.Color(0,bright,0));
-            pixels.setPixelColor(15, pixels.Color(0,0,0));
-            pixels.show();
+
+            leds[0] = CRGB(0,0,0);
+            leds[1] = CRGB(0,0,0);
+            leds[2] = CRGB(bright,0,0);
+            leds[3] = CRGB(0,0,0);
+            leds[4] = CRGB(0,0,0);
+            leds[5] = CRGB(0,0,0);
+            leds[6] = CRGB(bright,0,0);
+            leds[7] = CRGB(0,0,0);
+            leds[8] = CRGB(0,0,0);
+            leds[9] = CRGB(0,0,0);
+            leds[10] = CRGB(bright,0,0);
+            leds[11] = CRGB(0,0,0);
+            leds[12] = CRGB(0,0,0);
+            leds[13] = CRGB(0,0,0);
+            leds[14] = CRGB(bright,0,0);
+            leds[15] = CRGB(0,0,0);
+            FastLED.show();
+            
           }
 
           else if (mode == 2)
-          {
+          {/*
             //blue with red added
             pixels.setPixelColor(0, pixels.Color(hue1,0,bright));
             pixels.setPixelColor(1, pixels.Color(hue1,0,bright));
@@ -310,7 +351,25 @@ void loop() {
             pixels.setPixelColor(14, pixels.Color(0,0,0));
             pixels.setPixelColor(15, pixels.Color(0,0,0));
             pixels.show();
-            
+            */
+
+            leds[0] = CRGB(hue1,0,bright);
+            leds[1] = CRGB(hue1,0,bright);
+            leds[2] = CRGB(hue1,0,bright);
+            leds[3] = CRGB(hue1,0,bright);
+            leds[4] = CRGB(0,0,0);
+            leds[5] = CRGB(0,0,0);
+            leds[6] = CRGB(0,0,0);
+            leds[7] = CRGB(0,0,0);
+            leds[8] = CRGB(hue1,0,bright);
+            leds[9] = CRGB(hue1,0,bright);
+            leds[10] = CRGB(hue1,0,bright);
+            leds[11] = CRGB(hue1,0,bright);
+            leds[12] = CRGB(0,0,0);
+            leds[13] = CRGB(0,0,0);
+            leds[14] = CRGB(0,0,0);
+            leds[15] = CRGB(0,0,0);
+            FastLED.show();
           }
 
         }
@@ -319,27 +378,29 @@ void loop() {
         {
           if (mode == 1)  //green spinners
           {
-            pixels.setPixelColor(0, pixels.Color(0,0,0));
-            pixels.setPixelColor(1, pixels.Color(0,bright,0));
-            pixels.setPixelColor(2, pixels.Color(0,0,0));
-            pixels.setPixelColor(3, pixels.Color(0,0,0));
-            pixels.setPixelColor(4, pixels.Color(0,0,0));
-            pixels.setPixelColor(5, pixels.Color(0,0,0));
-            pixels.setPixelColor(6, pixels.Color(0,0,0));
-            pixels.setPixelColor(7, pixels.Color(0,bright,0));
-            pixels.setPixelColor(8, pixels.Color(0,0,0));
-            pixels.setPixelColor(9, pixels.Color(0,bright,0));
-            pixels.setPixelColor(10, pixels.Color(0,0,0));
-            pixels.setPixelColor(11, pixels.Color(0,0,0));
-            pixels.setPixelColor(12, pixels.Color(0,0,0));
-            pixels.setPixelColor(13, pixels.Color(0,0,0));
-            pixels.setPixelColor(14, pixels.Color(0,0,0));
-            pixels.setPixelColor(15, pixels.Color(0,bright,0));
-            pixels.show();
+            
+            leds[0] = CRGB(0,0,0);
+            leds[1] = CRGB(bright,0,0);
+            leds[2] = CRGB(0,0,0);
+            leds[3] = CRGB(0,0,0);
+            leds[4] = CRGB(0,0,0);
+            leds[5] = CRGB(0,0,0);
+            leds[6] = CRGB(0,0,0);
+            leds[7] = CRGB(bright,0,0);
+            leds[8] = CRGB(0,0,0);
+            leds[9] = CRGB(bright,0,0);
+            leds[10] = CRGB(0,0,0);
+            leds[11] = CRGB(0,0,0);
+            leds[12] = CRGB(0,0,0);
+            leds[13] = CRGB(0,0,0);
+            leds[14] = CRGB(0,0,0);
+            leds[15] = CRGB(bright,0,0);
+            FastLED.show();
           }
           
           else if (mode == 2)
           {
+            /*
             //green with blue added
             pixels.setPixelColor(0, pixels.Color(0,0,0));
             pixels.setPixelColor(1, pixels.Color(0,0,0));
@@ -358,7 +419,25 @@ void loop() {
             pixels.setPixelColor(14, pixels.Color(0,bright,hue2));
             pixels.setPixelColor(15, pixels.Color(0,bright,hue2));
             pixels.show();
-            
+            */
+
+            leds[0] = CRGB(0,0,0);
+            leds[1] = CRGB(0,0,0);
+            leds[2] = CRGB(0,0,0);
+            leds[3] = CRGB(0,0,0);
+            leds[4] = CRGB(0,bright,hue2);
+            leds[5] = CRGB(0,bright,hue2);
+            leds[6] = CRGB(0,bright,hue2);
+            leds[7] = CRGB(0,bright,hue2);
+            leds[8] = CRGB(0,0,0);
+            leds[9] = CRGB(0,0,0);
+            leds[10] = CRGB(0,0,0);
+            leds[11] = CRGB(0,0,0);
+            leds[12] = CRGB(0,bright,hue2);
+            leds[13] = CRGB(0,bright,hue2);
+            leds[14] = CRGB(0,bright,hue2);
+            leds[15] = CRGB(0,bright,hue2);
+            FastLED.show();
           }
 
           
@@ -372,7 +451,7 @@ void loop() {
     }
 
     count1++;
-
+   
   }
    
 
