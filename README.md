@@ -1,5 +1,6 @@
 SparkFun SAMD21 Firmware for Futaba SBUS
 ===============================================================================
+References According to Pete Video: https://www.sparkfun.com/news/2385
 
 This example code is written in Arduino 1.8.2 for a SAMD21 Mini Breakout:
 https://www.sparkfun.com/products/13664
